@@ -74,19 +74,102 @@ char* get_command_and_filename_str(int flag){
 }
 */
 
-
 void upload_file_to_server(){
     int sockfd = make_connection();
+    size_t numbytes;
+    struct stat *file_status = malloc(sizeof(struct stat));
+    //char* filename;
+    //filename = "tirgul3.c";
+    char filename[] = "tirgul3.c";
+    int fd = open(filename,O_RDONLY);
+    if(fd==-1){
+    printf("Error.No such file.\n");
+    return;
+    }
+    size_t size_of_file_name = strlen(filename);
+    int status = stat(filename,file_status);
+        if(status==-1){
+            perror("error:");
+            return;
+    }
+    off_t  file_size =  file_status->st_size;
+    Request request;
+    request.request = 2;
+    request.file_size = file_size;
+    request.size_of_file_name = size_of_file_name;
+    Request* request_ptr = &request;
+    if ((numbytes = send(sockfd, request_ptr, sizeof(Request), 0)) == -1) {
+	    perror("recv");
+	    exit(1);
+	}
+
+    Response *response;
+    if ((numbytes = recv(sockfd, response,sizeof(Response), 0)) == -1) {
+                perror("recv");
+                exit(1);
+    }
+    if(*response==OK){
+        size_t send_size = 0;
+        if ((numbytes = send(sockfd, filename,size_of_file_name, 0)) == -1) {    // sendin file name
+	    perror("recv");
+	    exit(1);
+        }
+
+
+
+        char buffer[REQUEST_SIZE];
+        int byte_send = 0;
+        int size_read = 0;
+        int error_count = 0;
+        while(byte_send <= request.file_size){  // read and sending file
+            size_read = read(fd,buffer,REQUEST_SIZE);
+                  numbytes = 0;
+                       if ((numbytes = send(sockfd,buffer+numbytes,REQUEST_SIZE, 0)) == -1) {    // sendin file content
+                          perror("recv");
+                           exit(1);
+                        }
+
+                  byte_send+=  numbytes;
+                  error_count = 0;
+
+        }
+        if ((numbytes = recv(sockfd, response,sizeof(Response), 0)) == -1) {
+                perror("recv");
+                exit(1);
+       }
+     if(*response==OK){
+    printf("Stored file in server done\n");
+    }
+
+        else{
+                printf("Failed to story fail. Try again\n");
+            }
+
+     }
+      else{
+      printf("Failed to story fail. Try again\n");
+        }
+
+  }
+
+
+
+
+
+
+/* old
+void upload_file_to_server(){
+    int sockfd = make_connection();
+
     Request request = {2}; // flag of upload request
     Request* request_ptr = &request;
     int numbytes;
+    printf("gonna send #1\n");
     if ((numbytes = send(sockfd, request_ptr, sizeof(request_ptr), 0)) == -1){
         printf("Failed to send ls request to the server.\n");
 	    perror("ERROR writing to socket");
 	    exit(1);
     }
-
-
 
 
     //int sockfd = connect_to_server(IP);
@@ -106,37 +189,53 @@ void upload_file_to_server(){
             return;
     }
     off_t file_size =  file_status->st_size;
+    size_t send_size = 0;
+    if ((numbytes = send(sockfd, filename,filename_size, 0)) == -1) {    // sendin file name
+	    perror("recv 139");
+	    exit(1);
+    }
     //Request request;
     //request.request = {2};
-    request.file_size = file_size;
-    request.size_of_file_name = filename_size;
-    Request* request_ptr = &request;
-    if ((numbytes_filename = send(sockfd, request_ptr, sizeof(Request), 0)) == -1) {
+
+    // send file size and size of filename
+
+    //request.file_size = file_size;
+   // request.size_of_file_name = filename_size;
+   // Request* request_ptr2 = &request;
+
+
+
+
+    if(*answer==ACCEPT){
+
+    }
+
+
+   Request request2;
+
+     request2.file_size = file_size;
+   request2.size_of_file_name = filename_size;
+
+    Request* request_ptr2 = &request2;
+printf("gonna send #2\n");
+    // sned request with file size filename size
+    if ((numbytes_filename = send(sockfd, request_ptr2, sizeof(Request), 0)) == -1) {
 	    perror("send error");
 	    exit(1);
 	}
-	/*
-    Answer *answer;
-    if ((numbytes = recv(sockfd, answer,sizeof(Answer), 0)) == -1) {
-                perror("recv");
-                exit(1);
-    }
-    if(*answer==ACCEPT){
-        size_t send_size = 0;
-        if ((numbytes = send(sockfd, argv[2],size_of_file_name, 0)) == -1) {    // sendin file name
+
+
+
+	// send the filename
+    if ((numbytes = send(sockfd, filename, size_of_file_name, 0)) == -1) {    // sendin file name
 	    perror("recv");
 	    exit(1);
 	}
 
-*/
-
-
-
-
 
 
 }
-
+*/
 
 
 void download_file_from_server(){

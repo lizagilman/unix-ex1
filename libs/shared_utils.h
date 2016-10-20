@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define PORT "2003"
+#define REQUEST_SIZE 4086
+#define MAX_FILE_SIZE  4086
+#define PORT "8567"
 
-
+typedef enum {ERROR,OK} Response;
 
 struct Request{
     int request;
